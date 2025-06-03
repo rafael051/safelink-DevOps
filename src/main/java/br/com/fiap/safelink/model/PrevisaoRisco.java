@@ -3,6 +3,7 @@ package br.com.fiap.safelink.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -41,42 +42,43 @@ public class PrevisaoRisco {
     /** Identificador único da previsão de risco. */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_previsao_risco")
     private Long id;
 
     // ===========================
     // 📊 Detalhes da Previsão
     // ===========================
 
-    /**
-     * Nível de risco previsto.
-     * Ex: ALTO, MÉDIO, BAIXO, CRÍTICO.
-     */
+    /** Nível de risco previsto. Ex: ALTO, MÉDIO, BAIXO, CRÍTICO. */
     @NotBlank(message = "O nível previsto de risco é obrigatório.")
+    @Column(name = "ds_nivel_previsto", nullable = false)
     private String nivelPrevisto;
 
-    /**
-     * Fonte da previsão (opcional).
-     * Pode indicar o modelo, serviço meteorológico ou técnica usada.
-     * Ex: "IA - Modelo SafeLink V2", "INMET", "ClimaTempo"
-     */
+    /** Fonte da previsão (modelo, serviço meteorológico ou técnica usada). */
+    @Column(name = "ds_fonte")
     private String fonte;
 
-    /**
-     * Data e hora em que a previsão foi gerada.
-     * Usado para controlar atualizações ou expiração de previsões antigas.
-     */
+    /** Data e hora em que a previsão foi gerada. */
     @NotNull(message = "A data de geração da previsão é obrigatória.")
+    @Column(name = "dt_gerado_em", nullable = false)
     private LocalDateTime geradoEm;
 
     // ===========================
-    // 🔗 Relacionamento
+    // 🌍 Relacionamento com Região
     // ===========================
 
-    /**
-     * Região associada à previsão de risco.
-     * Cada previsão está vinculada a uma e somente uma região.
-     */
+    /** Região associada à previsão de risco. */
     @ManyToOne(optional = false)
-    @JoinColumn(name = "regiao_id", nullable = false)
+    @JoinColumn(name = "id_regiao", nullable = false)
     private Regiao regiao;
+
+    // ===========================
+    // 🕒 Controle de criação (opcional)
+    // ===========================
+
+    /** Timestamp automático de criação da previsão (auditável). */
+    @CreationTimestamp
+    @Column(name = "dt_criacao", updatable = false)
+    private LocalDateTime dataCriacao;
+
 }

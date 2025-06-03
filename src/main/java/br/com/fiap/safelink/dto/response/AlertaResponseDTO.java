@@ -1,14 +1,22 @@
 package br.com.fiap.safelink.dto.response;
 
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 /**
  * # 📤 DTO: AlertaResponseDTO
  *
- * Representa os dados retornados ao cliente ao consultar ou criar um alerta.
- * Inclui detalhes do alerta e da região associada.
+ * Representa os dados enviados ao cliente ao consultar ou cadastrar um alerta.
+ * Inclui os atributos principais do alerta e informações básicas da região associada.
+ *
+ * ---
+ * ## 🧾 Utilização
+ * - Retornado em respostas de endpoints GET e POST de alerta.
+ * - Permite visualização imediata do alerta emitido e da região correspondente.
+ *
+ * ---
+ * @author Rafael
+ * @version 1.0
  */
 @Data
 @Builder
@@ -24,26 +32,26 @@ public class AlertaResponseDTO {
     private Long id;
 
     // ===========================
-    // 📝 Dados do Alerta
+    // 📝 Detalhes do Alerta
     // ===========================
 
-    /** Tipo do alerta (ex: Enchente, Deslizamento, Tempestade). */
+    /** Tipo textual do alerta (ex: Enchente, Deslizamento, Tempestade, etc). */
     private String tipo;
 
-    /** Nível de risco do alerta (ALTO, MÉDIO, BAIXO). */
+    /** Nível de risco do alerta (ex: ALTO, MÉDIO, BAIXO). */
     private String nivelRisco;
 
-    /** Mensagem exibida aos usuários. */
+    /** Mensagem explicativa enviada à população. */
     private String mensagem;
 
     /** Data e hora em que o alerta foi emitido. */
     private LocalDateTime emitidoEm;
 
     // ===========================
-    // 🌍 Informações da Região
+    // 🌍 Dados da Região
     // ===========================
 
-    /** ID da região associada ao alerta. */
+    /** ID da região geográfica associada ao alerta. */
     private Long regiaoId;
 
     /** Nome da região associada ao alerta. */

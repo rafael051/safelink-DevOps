@@ -6,23 +6,24 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 /**
- * 📁 Repositório JPA para a entidade Alerta.
+ * 📁 Repositório JPA para a entidade {@link Alerta}.
  *
- * Permite operações CRUD automáticas utilizando Spring Data JPA.
- * Também oferece suporte a Specification para consultas com filtros dinâmicos.
+ * Responsável por fornecer acesso aos alertas de risco emitidos pelo sistema.
+ * Suporta operações CRUD padrão e consultas avançadas via Specification.
  *
  * ---
- * - findAll(Specification, Pageable)
- * - findAll(Specification)
- * - exists(Specification)
- * - count(Specification)
+ * ### Funcionalidades oferecidas:
+ * - 🔍 `findAll(Specification, Pageable)` — busca paginada com filtros dinâmicos.
+ * - 🔎 `findAll(Specification)` — lista completa com critérios personalizados.
+ * - ✅ `exists(Specification)` — verifica existência com base em filtros.
+ * - #️⃣ `count(Specification)` — conta alertas com base em filtros aplicados.
  *
- * @author Rafael
+ * ---
+ * @autor Rafael
  * @since 1.0
  */
 @Repository
-public interface AlertaRepository
-        extends JpaRepository<Alerta, Long>,
+public interface AlertaRepository extends
+        JpaRepository<Alerta, Long>,
         JpaSpecificationExecutor<Alerta> {
-
 }

@@ -7,6 +7,7 @@ import br.com.fiap.safelink.service.TokenService;
 import br.com.fiap.safelink.exception.AuthExceptionUtils;
 import br.com.fiap.safelink.model.User;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
  * Controlador responsável pela autenticação de usuários e geração de tokens JWT.
  */
 @SecurityRequirement(name = "bearerAuth")
+@Tag(name = "1 - Autenticação", description = "Endpoints para login e emissão de tokens JWT")
 @RestController
 @RequiredArgsConstructor
 public class AuthController {

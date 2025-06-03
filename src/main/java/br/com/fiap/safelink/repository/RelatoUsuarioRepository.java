@@ -6,23 +6,24 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 /**
- * 📁 Repositório JPA para a entidade RelatoUsuario.
+ * 📁 Repositório JPA para a entidade {@link RelatoUsuario}.
  *
- * Permite operações CRUD automáticas utilizando Spring Data JPA.
- * Também oferece suporte a Specification para consultas com filtros dinâmicos.
+ * Responsável por fornecer acesso aos relatos enviados por usuários do sistema.
+ * Suporta operações CRUD e consultas avançadas com Specification.
  *
  * ---
- * - findAll(Specification, Pageable)
- * - findAll(Specification)
- * - exists(Specification)
- * - count(Specification)
+ * ### Funcionalidades oferecidas:
+ * - 🔍 `findAll(Specification, Pageable)` — busca paginada com filtros dinâmicos.
+ * - 🔎 `findAll(Specification)` — busca completa com critérios específicos.
+ * - ✅ `exists(Specification)` — verifica existência com base em filtros.
+ * - #️⃣ `count(Specification)` — conta relatos com base em critérios.
  *
+ * ---
  * @author Rafael
  * @since 1.0
  */
 @Repository
-public interface RelatoUsuarioRepository
-        extends JpaRepository<RelatoUsuario, Long>,
+public interface RelatoUsuarioRepository extends
+        JpaRepository<RelatoUsuario, Long>,
         JpaSpecificationExecutor<RelatoUsuario> {
-
 }

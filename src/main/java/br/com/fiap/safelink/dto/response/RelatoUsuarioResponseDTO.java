@@ -1,13 +1,22 @@
 package br.com.fiap.safelink.dto.response;
 
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 /**
  * # 📤 DTO: RelatoUsuarioResponseDTO
  *
- * Retorna os dados de um relato feito por um usuário.
+ * Retorna os dados de um relato feito por um usuário do sistema SafeLink.
+ * Inclui informações textuais do relato, data, e nomes dos envolvidos (usuário e região).
+ *
+ * ---
+ * ## 📌 Utilização
+ * - Utilizado nas respostas de endpoints GET e POST de relatos.
+ * - Permite exibição clara e organizada de informações coletadas da comunidade.
+ *
+ * ---
+ * @author Rafael
+ * @version 1.0
  */
 @Data
 @Builder
@@ -15,18 +24,34 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class RelatoUsuarioResponseDTO {
 
-    /** Identificador único do relato. */
+    // ===========================
+    // 🔑 Identificação
+    // ===========================
+
+    /** Identificador único do relato realizado. */
     private Long id;
 
-    /** Texto enviado pelo usuário. */
+    // ===========================
+    // 📝 Conteúdo do Relato
+    // ===========================
+
+    /** Texto livre enviado pelo usuário com a descrição do ocorrido. */
     private String mensagem;
 
-    /** Data e hora do relato. */
+    /** Data e hora em que o relato foi registrado. */
     private LocalDateTime dataRelato;
 
-    /** Nome do usuário autor do relato. */
+    // ===========================
+    // 👤 Informações do Usuário
+    // ===========================
+
+    /** Nome do usuário que realizou o relato. */
     private String nomeUsuario;
 
-    /** Nome da região onde o relato foi feito. */
+    // ===========================
+    // 📍 Informações da Região
+    // ===========================
+
+    /** Nome da região geográfica associada ao relato. */
     private String nomeRegiao;
 }

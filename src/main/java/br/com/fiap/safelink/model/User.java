@@ -1,5 +1,6 @@
 package br.com.fiap.safelink.model;
 
+import br.com.fiap.safelink.model.enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -39,11 +40,10 @@ public class User implements UserDetails {
     // 🔑 Identificação
     // ===========================
 
-    /**
-     * Identificador único do usuário (chave primária).
-     */
+    /** Identificador único do usuário (chave primária). */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_user")
     private Long id;
 
     // ===========================
@@ -51,20 +51,22 @@ public class User implements UserDetails {
     // ===========================
 
     /**
-     * E-mail do usuário. Usado como login.
+     * E-mail do usuário.
+     * Usado como login no sistema.
      * Deve ser único e seguir o padrão de endereço de e-mail válido.
      */
     @Email(message = "E-mail inválido")
     @NotBlank(message = "O e-mail é obrigatório.")
-    @Column(unique = true, nullable = false)
+    @Column(name = "ds_email", unique = true, nullable = false)
     private String email;
 
     /**
      * Senha do usuário, que será armazenada já criptografada.
-     * Deve ter pelo menos 8 caracteres.
+     * Deve ter no mínimo 8 caracteres por segurança.
      */
     @NotBlank(message = "A senha é obrigatória.")
     @Size(min = 8, message = "A senha deve ter no mínimo 8 caracteres.")
+    @Column(name = "ds_senha", nullable = false)
     private String password;
 
     // ===========================
@@ -72,12 +74,12 @@ public class User implements UserDetails {
     // ===========================
 
     /**
-     * Papel do usuário na aplicação.
-     * Pode ser `ADMIN` ou `USER`.
+     * Papel (role) do usuário na aplicação.
+     * Pode ser ADMIN ou USER.
      * Define os privilégios de acesso aos recursos protegidos.
      */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "tp_role", nullable = false)
     private UserRole role;
 
     // ===========================
@@ -86,18 +88,18 @@ public class User implements UserDetails {
 
     /**
      * Retorna a lista de autoridades (permissões) do usuário.
-     * Cada `UserRole` é convertido para `GrantedAuthority`.
+     * Cada UserRole é convertido em uma autoridade do Spring Security.
      *
-     * @return Lista com a autoridade baseada na role.
+     * @return Lista com a autoridade baseada na role (com prefixo "ROLE_").
      */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     /**
-     * Retorna o identificador principal do usuário usado para login.
-     * No nosso caso, é o `email`.
+     * Retorna o login do usuário.
+     * Neste caso, o e-mail é usado como identificador principal.
      *
      * @return e-mail do usuário
      */
@@ -107,8 +109,10 @@ public class User implements UserDetails {
     }
 
     /**
-     * Define se a conta do usuário está expirada.
-     * Aqui, sempre retorna `true` (conta nunca expira).
+     * Indica se a conta está expirada.
+     * Retorna true indicando que nunca expira.
+     *
+     * @return true (conta não expira)
      */
     @Override
     public boolean isAccountNonExpired() {
@@ -116,8 +120,10 @@ public class User implements UserDetails {
     }
 
     /**
-     * Define se a conta está bloqueada.
-     * Aqui, sempre retorna `true` (conta nunca bloqueia).
+     * Indica se a conta está bloqueada.
+     * Retorna true indicando que nunca está bloqueada.
+     *
+     * @return true (conta nunca bloqueia)
      */
     @Override
     public boolean isAccountNonLocked() {
@@ -125,8 +131,10 @@ public class User implements UserDetails {
     }
 
     /**
-     * Define se as credenciais estão expiradas.
-     * Aqui, sempre retorna `true` (credencial sempre válida).
+     * Indica se as credenciais estão expiradas.
+     * Retorna true indicando que são sempre válidas.
+     *
+     * @return true (credenciais não expiram)
      */
     @Override
     public boolean isCredentialsNonExpired() {
@@ -134,8 +142,10 @@ public class User implements UserDetails {
     }
 
     /**
-     * Define se o usuário está habilitado no sistema.
-     * Aqui, sempre `true`. Pode ser ajustado futuramente.
+     * Indica se o usuário está ativo/habilitado.
+     * Retorna true (padrão), mas pode ser ajustado futuramente.
+     *
+     * @return true (usuário está habilitado)
      */
     @Override
     public boolean isEnabled() {

@@ -40,11 +40,11 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- 🧪 H2 Database (em memória) -->
+        <!-- 🛢️ Oracle Database -->
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc8</artifactId>
+            <version>21.1.0.0</version>
         </dependency>
 
         <!-- 🔐 Segurança -->
@@ -117,12 +117,12 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- ❌ PostgreSQL (opcional: habilite apenas em produção) -->
+        <!-- ❌ Banco H2 (removido do runtime, use só em perfil de teste) -->
         <!--
         <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.7.3</version>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
         </dependency>
         -->
 

@@ -1,28 +1,25 @@
 package br.com.fiap.safelink.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * # 🔐 Credenciais de Acesso
+ * 🔐 DTO para autenticação de usuários.
  *
- * Record usada para autenticação de usuários no sistema SafeLink.
- * Contém os dados essenciais: e-mail e senha.
- *
- * ---
- * ## 📌 Utilização
- * - DTO de entrada no endpoint de login (`/auth/login`)
- * - Usado para gerar o token JWT após validação
+ * Representa as credenciais fornecidas no login (/auth/login),
+ * contendo e-mail e senha com validações e documentação Swagger.
  */
+@Schema(description = "Credenciais fornecidas para autenticação do usuário.")
 public record Credentials(
 
-        /** E-mail do usuário (obrigatório e válido). */
-        @NotBlank(message = "O e-mail é obrigatório.")
-        @Email(message = "Formato de e-mail inválido.")
+        @Schema(description = "E-mail do usuário", example = "admin@safelink.com")
+        @Email(message = "E-mail inválido")
+        @NotBlank(message = "E-mail é obrigatório")
         String email,
 
-        /** Senha do usuário (obrigatória). */
-        @NotBlank(message = "A senha é obrigatória.")
+        @Schema(description = "Senha do usuário", example = "admin123")
+        @NotBlank(message = "Senha é obrigatória")
         String password
 
 ) {}

@@ -12,6 +12,11 @@ import java.time.LocalDateTime;
  *
  * Todos os campos são opcionais.
  *
+ * Exemplo de uso na controller:
+ * `@ParameterObject AlertaFilter filter`
+ *
+ * 💡 Importante: sobrescreve toString() para permitir uso seguro em cache.
+ *
  * @author Rafael
  * @since 1.0
  */
@@ -42,4 +47,13 @@ public record AlertaFilter(
         /** ID da região onde o alerta foi emitido. */
         Long regiaoId
 
-) {}
+) {
+        @Override
+        public String toString() {
+                return "tipo=" + tipo +
+                        ",nivelRisco=" + nivelRisco +
+                        ",dataInicio=" + dataInicio +
+                        ",dataFim=" + dataFim +
+                        ",regiaoId=" + regiaoId;
+        }
+}

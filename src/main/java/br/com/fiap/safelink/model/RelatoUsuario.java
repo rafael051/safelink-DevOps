@@ -3,6 +3,7 @@ package br.com.fiap.safelink.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -26,7 +27,7 @@ import java.time.LocalDateTime;
  *
  * ---
  * @version 1.0
- * @author Rafael
+ * @autor Rafael
  */
 @Entity
 @Data
@@ -43,43 +44,44 @@ public class RelatoUsuario {
     /** Identificador único do relato enviado (chave primária). */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_relato_usuario")
     private Long id;
 
     // ===========================
     // 💬 Conteúdo do Relato
     // ===========================
 
-    /**
-     * Texto do relato descritivo.
-     * Pode incluir percepção do risco, descrição de danos, etc.
-     */
+    /** Texto do relato descritivo. */
     @NotBlank(message = "A mensagem do relato é obrigatória.")
+    @Column(name = "ds_mensagem", nullable = false)
     private String mensagem;
 
-    /**
-     * Data e hora em que o relato foi feito.
-     * Usado para rastrear o momento da observação do usuário.
-     */
+    /** Data e hora em que o relato foi feito. */
     @NotNull(message = "A data do relato é obrigatória.")
+    @Column(name = "dt_relato", nullable = false)
     private LocalDateTime dataRelato;
 
     // ===========================
     // 🔗 Relacionamentos
     // ===========================
 
-    /**
-     * Usuário que realizou o relato.
-     * Obrigatoriamente vinculado a um `User` autenticado no sistema.
-     */
+    /** Usuário que realizou o relato. */
     @ManyToOne(optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "id_usuario", nullable = false)
     private User usuario;
 
-    /**
-     * Região onde o relato foi feito ou observado.
-     * Cada relato está vinculado a uma região cadastrada.
-     */
+    /** Região onde o relato foi feito ou observado. */
     @ManyToOne(optional = false)
-    @JoinColumn(name = "regiao_id", nullable = false)
+    @JoinColumn(name = "id_regiao", nullable = false)
     private Regiao regiao;
+
+    // ===========================
+    // 🕒 Controle de criação (opcional)
+    // ===========================
+
+    /** Timestamp de criação do registro do relato. */
+    @CreationTimestamp
+    @Column(name = "dt_criacao", updatable = false)
+    private LocalDateTime dataCriacao;
+
 }

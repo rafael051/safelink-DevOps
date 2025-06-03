@@ -5,7 +5,17 @@ import lombok.*;
 /**
  * # 📤 DTO: RegiaoResponseDTO
  *
- * Objeto de saída para exibição dos dados de uma região monitorada.
+ * Objeto de saída retornado pela API ao consultar uma região monitorada.
+ * Apresenta os dados geográficos e administrativos de uma determinada área sob monitoramento.
+ *
+ * ---
+ * ## 📌 Utilização
+ * - Usado em respostas de endpoints GET (listar, buscar por ID) e POST (após criação).
+ * - Exibido em telas de gestão e visualização de regiões no front-end.
+ *
+ * ---
+ * @author Rafael
+ * @version 1.0
  */
 @Data
 @Builder
@@ -13,21 +23,33 @@ import lombok.*;
 @AllArgsConstructor
 public class RegiaoResponseDTO {
 
-    /** Identificador único da região. */
+    // ===========================
+    // 🔑 Identificação
+    // ===========================
+
+    /** Identificador único da região cadastrada no sistema. */
     private Long id;
 
-    /** Nome da região cadastrada. */
+    // ===========================
+    // 🗺️ Dados Administrativos
+    // ===========================
+
+    /** Nome da região (ex: Centro, Zona Leste). */
     private String nome;
 
-    /** Cidade onde a região está localizada. */
+    /** Nome da cidade onde a região está localizada. */
     private String cidade;
 
-    /** Estado da região (UF). */
+    /** Sigla do estado (UF) da região (ex: SP, RJ). */
     private String estado;
 
-    /** Coordenada de latitude. */
+    // ===========================
+    // 📍 Coordenadas Geográficas
+    // ===========================
+
+    /** Coordenada de latitude da região (graus decimais). */
     private Double latitude;
 
-    /** Coordenada de longitude. */
+    /** Coordenada de longitude da região (graus decimais). */
     private Double longitude;
 }

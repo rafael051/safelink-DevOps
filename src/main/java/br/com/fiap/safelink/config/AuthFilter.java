@@ -1,89 +1,86 @@
 package br.com.fiap.safelink.config;
 
-import java.io.IOException;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
-
 import br.com.fiap.safelink.service.TokenService;
+import br.com.fiap.safelink.exception.AuthExceptionUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
- * # 🔐 Filtro: AuthFilter
+ * # 🔐 Filtro: AuthFilter (adaptado Allibus)
  *
- * Filtro responsável por interceptar todas as requisições HTTP e validar o token JWT presente no cabeçalho Authorization.
- *
- * ---
- * ## 🧩 Funcionalidades
- * - Extrai e valida o token JWT da requisição.
- * - Recupera o usuário autenticado e registra no contexto de segurança do Spring.
- * - Rejeita requisições sem "Bearer " ou sem token válido.
- *
- * ---
- * @author Rafael
- * @version 1.0
+ * Filtro de autenticação JWT com suporte a caminhos públicos.
+ * Baseado na implementação do projeto Recebedoria.
  */
 @Component
 public class AuthFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private TokenService tokenService;
+    private static final Logger log = LoggerFactory.getLogger(AuthFilter.class);
+    private static final String AUTH_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
+    private final AntPathMatcher matcher = new AntPathMatcher();
+
+    private final TokenService tokenService;
+
+    private static final List<String> PUBLIC_PATHS = List.of(
+            "/login", "/auth/login",
+            "/swagger-ui/**", "/v3/api-docs/**"
+    );
+
+    public AuthFilter(TokenService tokenService) {
+        this.tokenService = tokenService;
+    }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
-        // ============================
-        // 📥 Captura do Header
-        // ============================
-        var header = request.getHeader("Authorization");
+        String uri = request.getRequestURI();
+        log.debug("🔎 Requisição para URI: {}", uri);
 
-        if (header == null || header.isBlank()) {
+        if (isPublicPath(uri)) {
+            log.debug("🔓 Acesso público permitido para: {}", uri);
             filterChain.doFilter(request, response);
             return;
         }
 
-        // ============================
-        // ❌ Validação do prefixo
-        // ============================
-        if (!header.startsWith("Bearer ")) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("""
-                {
-                    "message": "Header deve iniciar com 'Bearer '"
-                }
-            """);
+        final String header = request.getHeader(AUTH_HEADER);
+
+        if (header == null || !header.startsWith(BEARER_PREFIX)) {
+            filterChain.doFilter(request, response);
             return;
         }
 
-        // ============================
-        // 🔓 Extração e validação do token
-        // ============================
-        var jwt = header.replace("Bearer ", "");
-        var user = tokenService.getUserFromToken(jwt);
+        final String jwt = header.substring(BEARER_PREFIX.length());
 
-        // ============================
-        // ✅ Autenticação no contexto
-        // ============================
-        var authentication = new UsernamePasswordAuthenticationToken(
-                user,
-                null,
-                user.getAuthorities()
-        );
+        try {
+            var user = tokenService.getUserFromToken(jwt);
+            var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            log.debug("✅ Autenticação JWT bem-sucedida para: {}", user.getEmail());
+        } catch (Exception ex) {
+            log.warn("⚠️ JWT inválido: {}", ex.getMessage());
+            AuthExceptionUtils.sendJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "Token inválido ou expirado");
+            return;
+        }
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // 🟢 Continuação da requisição
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isPublicPath(String uri) {
+        return PUBLIC_PATHS.stream().anyMatch(pattern -> matcher.match(pattern, uri));
     }
 }

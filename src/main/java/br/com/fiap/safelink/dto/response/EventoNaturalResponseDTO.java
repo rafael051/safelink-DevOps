@@ -1,14 +1,22 @@
 package br.com.fiap.safelink.dto.response;
 
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 /**
  * # 📤 DTO: EventoNaturalResponseDTO
  *
- * Retorna os dados de um evento natural registrado no sistema.
- * Exibido em chamadas GET ou após criação de novos registros.
+ * Retorna os dados de um evento natural registrado no sistema SafeLink.
+ * É utilizado como resposta nas chamadas GET (consulta) ou POST (criação).
+ *
+ * ---
+ * ## 📌 Utilização
+ * - Apresenta ao cliente os detalhes do evento natural registrado.
+ * - Inclui informações básicas da região relacionada.
+ *
+ * ---
+ * @author Rafael
+ * @version 1.0
  */
 @Data
 @Builder
@@ -16,21 +24,33 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class EventoNaturalResponseDTO {
 
-    /** Identificador único do evento. */
+    // ===========================
+    // 🔑 Identificação
+    // ===========================
+
+    /** Identificador único do evento natural registrado. */
     private Long id;
 
-    /** Tipo do evento ocorrido (ex: Enchente, Deslizamento). */
+    // ===========================
+    // 🌪️ Detalhes do Evento
+    // ===========================
+
+    /** Tipo do evento natural (ex: Enchente, Deslizamento, Vendaval). */
     private String tipo;
 
-    /** Descrição adicional fornecida no momento do registro. */
+    /** Descrição adicional fornecida no momento do registro do evento. */
     private String descricao;
 
-    /** Data e hora da ocorrência registrada. */
+    /** Data e hora da ocorrência do evento. */
     private LocalDateTime dataOcorrencia;
 
-    /** ID da região associada. */
+    // ===========================
+    // 🌍 Dados da Região
+    // ===========================
+
+    /** ID da região geográfica vinculada ao evento. */
     private Long regiaoId;
 
-    /** Nome da região associada. */
+    /** Nome da região associada ao evento. */
     private String regiaoNome;
 }

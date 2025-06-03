@@ -19,6 +19,14 @@ import java.util.Map;
  * oferecendo respostas JSON claras e padronizadas para o cliente.
  *
  * ---
+ *
+ * ## ✅ Benefícios:
+ * - Evita vazamento de stacktraces para o front-end
+ * - Permite mensagens de erro personalizadas
+ * - Padroniza a estrutura de erro da API (`timestamp`, `status`, `message` ou `errors`)
+ *
+ * ---
+ *
  * @author Rafael
  * @since 1.0
  */
@@ -32,15 +40,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, Object> response = new HashMap<>();
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(e -> errors.put(e.getField(), e.getDefaultMessage()));
+
+        ex.getBindingResult().getFieldErrors()
+                .forEach(e -> errors.put(e.getField(), e.getDefaultMessage()));
+
         response.put("timestamp", LocalDateTime.now());
         response.put("status", HttpStatus.BAD_REQUEST.value());
         response.put("errors", errors);
+
         return ResponseEntity.badRequest().body(response);
     }
 
     /**
-     * ## ❌ Exceções com `ResponseStatusException`
+     * ## ❌ Exceções explícitas com `ResponseStatusException`
      */
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, Object>> handleResponseStatus(ResponseStatusException ex) {
@@ -52,7 +64,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * ## ⚠️ Violação de parâmetros de URL
+     * ## ⚠️ Violação de restrições em parâmetros de URL
      */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Map<String, Object>> handleConstraintViolation(ConstraintViolationException ex) {
@@ -97,17 +109,5 @@ public class GlobalExceptionHandler {
         response.put("status", HttpStatus.UNAUTHORIZED.value());
         response.put("message", "E-mail ou senha incorretos");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-    }
-
-    /**
-     * ## 📛 Alerta não encontrado
-     */
-    @ExceptionHandler(AlertaNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleAlertaNotFound(AlertaNotFoundException ex) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.NOT_FOUND.value());
-        response.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 }

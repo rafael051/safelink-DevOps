@@ -6,23 +6,24 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 /**
- * 📁 Repositório JPA para a entidade EventoNatural.
+ * 📁 Repositório JPA para a entidade {@link EventoNatural}.
  *
- * Permite operações CRUD automáticas utilizando Spring Data JPA.
- * Também oferece suporte a Specification para consultas com filtros dinâmicos.
+ * Responsável por fornecer acesso aos dados de eventos naturais já registrados no sistema.
+ * Suporta operações CRUD padrão e consultas avançadas via Specification.
  *
  * ---
- * - findAll(Specification, Pageable)
- * - findAll(Specification)
- * - exists(Specification)
- * - count(Specification)
+ * ### Funcionalidades oferecidas:
+ * - 🔍 `findAll(Specification, Pageable)` — busca paginada com filtros dinâmicos.
+ * - 🔎 `findAll(Specification)` — busca lista completa com critérios.
+ * - ✅ `exists(Specification)` — verifica existência com base em filtros.
+ * - #️⃣ `count(Specification)` — conta registros com base em filtros.
  *
+ * ---
  * @author Rafael
  * @since 1.0
  */
 @Repository
-public interface EventoNaturalRepository
-        extends JpaRepository<EventoNatural, Long>,
+public interface EventoNaturalRepository extends
+        JpaRepository<EventoNatural, Long>,
         JpaSpecificationExecutor<EventoNatural> {
-
 }

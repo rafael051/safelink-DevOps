@@ -3,6 +3,7 @@ package br.com.fiap.safelink.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -41,6 +42,7 @@ public class EventoNatural {
     /** Identificador único do evento natural (chave primária). */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_evento_natural")
     private Long id;
 
     // ===========================
@@ -49,21 +51,33 @@ public class EventoNatural {
 
     /** Tipo do evento ocorrido (ex: Enchente, Deslizamento, Vendaval). */
     @NotBlank(message = "O tipo do evento é obrigatório.")
+    @Column(name = "ds_tipo", nullable = false)
     private String tipo;
 
     /** Descrição detalhada do ocorrido (opcional). */
+    @Column(name = "ds_descricao")
     private String descricao;
 
     /** Data e hora em que o evento aconteceu. */
     @NotNull(message = "A data de ocorrência é obrigatória.")
+    @Column(name = "dt_ocorrencia", nullable = false)
     private LocalDateTime dataOcorrencia;
 
     // ===========================
-    // 🔗 Relacionamentos
+    // 🌍 Relacionamento com Região
     // ===========================
 
     /** Região onde o evento foi registrado. */
     @ManyToOne(optional = false)
-    @JoinColumn(name = "regiao_id", nullable = false)
+    @JoinColumn(name = "id_regiao", nullable = false)
     private Regiao regiao;
+
+    // ===========================
+    // 🕒 Controle de criação (opcional)
+    // ===========================
+
+    /** Timestamp de criação do registro. */
+    @CreationTimestamp
+    @Column(name = "dt_criacao", updatable = false)
+    private LocalDateTime dataCriacao;
 }

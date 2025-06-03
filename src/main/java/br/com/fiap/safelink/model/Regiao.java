@@ -24,6 +24,10 @@ import java.util.List;
  * ## 🎯 Finalidade
  * Permitir a identificação de zonas vulneráveis e a agregação de dados
  * meteorológicos e sociais para atuação rápida e estratégica.
+ *
+ * ---
+ * @author Rafael
+ * @version 1.0
  */
 @Entity
 @Data
@@ -40,26 +44,32 @@ public class Regiao {
     /** Identificador único da região (chave primária). */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_regiao")
     private Long id;
 
     /** Nome da região (ex: "Centro", "Zona Leste", etc). */
     @NotBlank(message = "O nome da região é obrigatório.")
+    @Column(name = "nm_regiao", nullable = false)
     private String nome;
 
     /** Nome da cidade onde a região está localizada. */
     @NotBlank(message = "A cidade é obrigatória.")
+    @Column(name = "nm_cidade", nullable = false)
     private String cidade;
 
     /** Estado da região (UF). */
     @NotBlank(message = "O estado é obrigatório.")
+    @Column(name = "sg_estado", nullable = false, length = 2)
     private String estado;
 
     /** Latitude da coordenada central da região. */
     @NotNull(message = "Latitude é obrigatória.")
+    @Column(name = "vl_latitude", nullable = false)
     private Double latitude;
 
     /** Longitude da coordenada central da região. */
     @NotNull(message = "Longitude é obrigatória.")
+    @Column(name = "vl_longitude", nullable = false)
     private Double longitude;
 
     // ===========================
