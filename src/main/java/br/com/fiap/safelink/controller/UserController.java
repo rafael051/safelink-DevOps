@@ -9,23 +9,29 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 /**
  * # 👤 Controller: UserController
  *
- * Responsável por expor os endpoints REST para gerenciamento da entidade `User`.
- * Suporta operações de criação, leitura, atualização e exclusão de usuários autenticáveis.
+ * Camada REST responsável pelo gerenciamento da entidade `User`.
  *
  * ---
- * 🔐 Todos os endpoints exigem autenticação via JWT
- * 🌐 CORS liberado para http://localhost:3000
+ * ## 🔐 Segurança
+ * - Todos os endpoints exigem autenticação JWT
+ *
+ * ## 🌐 CORS
+ * - Permite acesso de frontend local em `http://localhost:3000`
+ *
+ * ## 📚 Funcionalidades
+ * - Criar, consultar, listar (com ou sem filtro), atualizar e excluir usuários autenticáveis
  */
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "2 - Usuários", description = "Endpoints para gerenciamento de usuários autenticáveis")
@@ -35,7 +41,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
 
-    private static final Logger log = LoggerFactory.getLogger(UserController.class);
     private final UserService service;
 
     // ============================================
@@ -43,20 +48,24 @@ public class UserController {
     // ============================================
 
     /**
-     * ### 📌 Criar novo usuário
+     * ## 📌 Criar novo usuário
+     *
+     * Registra um novo usuário no sistema com dados de e-mail, senha e role.
+     *
+     * - HTTP: 201 Created
      */
     @PostMapping
+    @CacheEvict(value = "users", allEntries = true)
     @Operation(
             summary = "Criar novo usuário",
             description = "Registra um novo usuário com e-mail, senha e papel.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Usuário criado com sucesso"),
+                    @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso"),
                     @ApiResponse(responseCode = "400", description = "Erro de validação nos dados enviados")
             }
     )
-    public ResponseEntity<UserResponseDTO> criar(@RequestBody @Valid UserRequestDTO dto) {
-        log.info("👤 Criando novo usuário: {}", dto.getEmail());
-        return ResponseEntity.ok(service.criarUsuario(dto));
+    public ResponseEntity<UserResponseDTO> gravar(@RequestBody @Valid UserRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.gravar(dto));
     }
 
     // ============================================
@@ -64,27 +73,26 @@ public class UserController {
     // ============================================
 
     /**
-     * ### 📋 Listar todos os usuários
+     * ## 📋 Listar todos os usuários (paginado)
      */
     @GetMapping
     @Operation(
-            summary = "Listar usuários",
-            description = "Retorna todos os usuários cadastrados.",
+            summary = "Listar usuários (paginado)",
+            description = "Retorna todos os usuários cadastrados com suporte à paginação.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Lista de usuários retornada com sucesso")
             }
     )
-    public ResponseEntity<List<UserResponseDTO>> listarTodos() {
-        log.info("📋 Listando todos os usuários.");
-        return ResponseEntity.ok(service.listarTodos());
+    public ResponseEntity<Page<UserResponseDTO>> listarTodosPaginado(@ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(service.consultarPaginado(pageable));
     }
 
     // ============================================
-    // 🔍 GET /users/{id}
+    // 🔎 GET /users/{id}
     // ============================================
 
     /**
-     * ### 🔍 Buscar usuário por ID
+     * ## 🔎 Buscar usuário por ID
      */
     @GetMapping("/{id}")
     @Operation(
@@ -96,13 +104,7 @@ public class UserController {
             }
     )
     public ResponseEntity<UserResponseDTO> buscarPorId(@PathVariable Long id) {
-        log.info("🔍 Buscando usuário com ID: {}", id);
-        return service.buscarPorId(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> {
-                    log.warn("⚠️ Usuário não encontrado para ID: {}", id);
-                    return ResponseEntity.notFound().build();
-                });
+        return ResponseEntity.ok(service.consultarPorId(id));
     }
 
     // ============================================
@@ -110,9 +112,10 @@ public class UserController {
     // ============================================
 
     /**
-     * ### ✏️ Atualizar usuário existente
+     * ## ✏️ Atualizar usuário
      */
     @PutMapping("/{id}")
+    @CacheEvict(value = "users", allEntries = true)
     @Operation(
             summary = "Atualizar usuário",
             description = "Atualiza os dados de um usuário existente.",
@@ -123,13 +126,7 @@ public class UserController {
             }
     )
     public ResponseEntity<UserResponseDTO> atualizar(@PathVariable Long id, @RequestBody @Valid UserRequestDTO dto) {
-        log.info("🔄 Atualizando usuário ID: {}", id);
-        return service.atualizarUsuario(id, dto)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> {
-                    log.warn("⚠️ Usuário não encontrado para atualização: {}", id);
-                    return ResponseEntity.notFound().build();
-                });
+        return ResponseEntity.ok(service.atualizar(id, dto));
     }
 
     // ============================================
@@ -137,9 +134,11 @@ public class UserController {
     // ============================================
 
     /**
-     * ### 🗑️ Excluir usuário
+     * ## 🗑️ Excluir usuário
      */
     @DeleteMapping("/{id}")
+    @CacheEvict(value = "users", allEntries = true)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "Excluir usuário",
             description = "Remove um usuário do sistema.",
@@ -148,9 +147,7 @@ public class UserController {
                     @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
             }
     )
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
-        log.info("❌ Excluindo usuário ID: {}", id);
-        boolean excluido = service.excluirUsuario(id);
-        return excluido ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    public void excluir(@PathVariable Long id) {
+        service.excluir(id);
     }
 }

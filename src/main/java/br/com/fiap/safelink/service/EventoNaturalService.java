@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -21,16 +22,16 @@ import java.util.List;
  * # 🌪️ Service: EventoNaturalService
  *
  * Camada de regras de negócio responsável por manipular a entidade `EventoNatural`.
- * Realiza validações, preenchimento de FKs, mapeamentos DTO↔Entidade e delega persistência ao repositório.
+ * Gerencia persistência, atualização, consultas com filtros e relacionamentos com `Regiao`.
+ *
+ * ---
+ * ✅ Usa ModelMapper para conversões
+ * 📦 Integra com RegiaoService para consistência relacional
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class EventoNaturalService {
-
-    // ============================================
-    // 🔗 Injeção de dependências
-    // ============================================
 
     private final EventoNaturalRepository repository;
     private final RegiaoService regiaoService;
@@ -41,18 +42,17 @@ public class EventoNaturalService {
     // ============================================
 
     /**
-     * ### 📌 Gravar novo evento natural
+     * Registra um novo evento natural no sistema.
      *
-     * - Converte o DTO para entidade
-     * - Preenche relacionamentos
-     * - Persiste no banco
-     * - Retorna DTO de resposta
+     * @param dto dados recebidos via API
+     * @return DTO da entidade salva
      */
+    @Transactional
     public EventoNaturalResponseDTO gravar(EventoNaturalRequestDTO dto) {
         EventoNatural evento = modelMapper.map(dto, EventoNatural.class);
         preencherRelacionamentos(evento, dto);
         evento = repository.save(evento);
-        log.info("✅ Evento natural registrado com sucesso: ID {}", evento.getId());
+        log.info("✅ Evento natural registrado: ID {}", evento.getId());
         return toDTO(evento);
     }
 
@@ -61,19 +61,22 @@ public class EventoNaturalService {
     // ============================================
 
     /**
-     * ### ✏️ Atualizar evento natural
+     * Atualiza os dados de um evento natural existente.
      *
-     * - Verifica existência
-     * - Aplica alterações do DTO
-     * - Salva novamente e retorna DTO atualizado
+     * @param id  ID do evento
+     * @param dto dados atualizados
+     * @return DTO com os dados persistidos
      */
+    @Transactional
     public EventoNaturalResponseDTO atualizar(Long id, EventoNaturalRequestDTO dto) {
         EventoNatural evento = repository.findById(id)
                 .orElseThrow(() -> new EventoNaturalNotFoundException(id));
+
         modelMapper.map(dto, evento);
         preencherRelacionamentos(evento, dto);
         evento = repository.save(evento);
-        log.info("✏️ Evento natural atualizado com sucesso: ID {}", evento.getId());
+
+        log.info("✏️ Evento natural atualizado: ID {}", evento.getId());
         return toDTO(evento);
     }
 
@@ -82,18 +85,16 @@ public class EventoNaturalService {
     // ============================================
 
     /**
-     * ### 🔍 Consulta com filtros dinâmicos
-     *
-     * Permite buscar eventos com base nos critérios do filtro.
+     * Consulta eventos naturais com filtros dinâmicos (Specification).
      */
     public Page<EventoNaturalResponseDTO> consultarComFiltro(EventoNaturalFilter filtro, Pageable pageable) {
         Specification<EventoNatural> spec = EventoNaturalSpecification.withFilters(filtro);
-        log.info("🔍 Consulta com filtros dinâmicos: {}", filtro);
+        log.info("🔍 Consulta de eventos com filtro: {}", filtro);
         return repository.findAll(spec, pageable).map(this::toDTO);
     }
 
     /**
-     * ### 🔍 Consultar por ID
+     * Consulta evento por ID.
      */
     public EventoNaturalResponseDTO consultarPorId(Long id) {
         EventoNatural evento = repository.findById(id)
@@ -103,18 +104,18 @@ public class EventoNaturalService {
     }
 
     /**
-     * ### 📋 Consulta completa (sem filtros, sem paginação)
+     * Lista todos os eventos naturais (sem filtro).
      */
     public List<EventoNaturalResponseDTO> consultarTodos() {
-        log.info("📋 Listando todos os eventos naturais cadastrados");
+        log.info("📋 Listando todos os eventos naturais");
         return repository.findAll().stream().map(this::toDTO).toList();
     }
 
     /**
-     * ### 📋 Consulta paginada simples (sem filtro)
+     * Lista eventos com paginação simples (sem filtros).
      */
     public Page<EventoNaturalResponseDTO> consultarPaginado(Pageable pageable) {
-        log.info("📋 Listando eventos naturais (paginado simples)");
+        log.info("📄 Listando eventos naturais paginados");
         return repository.findAll(pageable).map(this::toDTO);
     }
 
@@ -123,22 +124,29 @@ public class EventoNaturalService {
     // ============================================
 
     /**
-     * ### 🗑️ Excluir evento natural
+     * Remove um evento natural do sistema.
+     *
+     * @param id identificador do evento
      */
+    @Transactional
     public void excluir(Long id) {
         if (!repository.existsById(id)) {
             throw new EventoNaturalNotFoundException("Evento natural não encontrado para exclusão: " + id);
         }
+
         repository.deleteById(id);
-        log.info("🗑️ Evento natural excluído com sucesso: ID {}", id);
+        log.info("🗑️ Evento natural excluído: ID {}", id);
     }
 
     // ============================================
-    // 🧩 Relacionamentos externos
+    // 🧩 Relacionamentos
     // ============================================
 
     /**
-     * ### 🧩 Preencher relacionamentos
+     * Preenche a região vinculada ao evento natural.
+     *
+     * @param evento entidade sendo manipulada
+     * @param dto    dados recebidos da requisição
      */
     private void preencherRelacionamentos(EventoNatural evento, EventoNaturalRequestDTO dto) {
         if (dto.getRegiaoId() != null) {
@@ -147,11 +155,11 @@ public class EventoNaturalService {
     }
 
     // ============================================
-    // 🔄 Conversão auxiliar
+    // 🔄 Conversão
     // ============================================
 
     /**
-     * ### 🔄 Conversão Entidade → DTO
+     * Converte a entidade EventoNatural para o DTO de resposta.
      */
     private EventoNaturalResponseDTO toDTO(EventoNatural evento) {
         return modelMapper.map(evento, EventoNaturalResponseDTO.class);

@@ -22,12 +22,17 @@ import org.springframework.web.bind.annotation.*;
 /**
  * # 🗣️ Controller: RelatoUsuarioController
  *
- * Camada responsável por expor os endpoints REST para manipulação da entidade `RelatoUsuario`.
- * Define rotas para operações de criação, consulta com e sem filtros, busca por ID, atualização e exclusão.
+ * Controlador REST responsável pelo gerenciamento da entidade `RelatoUsuario`.
  *
  * ---
- * 🔐 Todos os endpoints exigem autenticação via JWT
- * 🌐 CORS liberado para http://localhost:3000
+ * ## 🔐 Segurança
+ * - Todos os endpoints requerem autenticação via JWT
+ *
+ * ## 🌐 CORS
+ * - Libera acesso do frontend local: http://localhost:3000
+ *
+ * ## 📚 Funcionalidades
+ * - Criar, consultar, listar (com e sem filtro), atualizar e excluir relatos enviados por usuários
  */
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "5 - Relatos de Usuário", description = "Endpoints relacionados aos relatos enviados por cidadãos e agentes de campo")
@@ -44,7 +49,13 @@ public class RelatoUsuarioController {
     // ============================================
 
     /**
-     * ### 📌 Cadastrar novo relato de usuário
+     * ## 📌 Cadastrar novo relato de usuário
+     *
+     * Registra um novo relato de condição de risco relatado por um cidadão ou agente.
+     *
+     * - Requisição: JSON contendo descrição, localização e tipo de risco
+     * - Resposta: DTO com ID e dados do relato criado
+     * - HTTP: 201 Created
      */
     @PostMapping
     @CacheEvict(value = "relatosUsuario", allEntries = true)
@@ -61,11 +72,13 @@ public class RelatoUsuarioController {
     }
 
     // ============================================
-    // 📋 GET /relatos-usuario (sem filtro, paginado)
+    // 📋 GET /relatos-usuario
     // ============================================
 
     /**
-     * ### 📋 Listar todos os relatos (paginado)
+     * ## 📋 Listar todos os relatos (sem filtro)
+     *
+     * Retorna todos os relatos cadastrados, com suporte a paginação e ordenação.
      */
     @GetMapping
     @Operation(
@@ -84,7 +97,12 @@ public class RelatoUsuarioController {
     // ============================================
 
     /**
-     * ### 📄 Consultar relatos com filtros e paginação
+     * ## 📄 Consultar relatos com filtros dinâmicos
+     *
+     * Permite filtrar relatos por atributos como data, tipo, descrição ou localização.
+     *
+     * - Utiliza Specification + Pageable
+     * - Cache ativado para performance
      */
     @GetMapping("/filtro")
     @Cacheable(
@@ -110,7 +128,9 @@ public class RelatoUsuarioController {
     // ============================================
 
     /**
-     * ### 🔍 Buscar relato por ID
+     * ## 🔍 Buscar relato por ID
+     *
+     * Retorna os dados detalhados de um relato a partir do ID informado.
      */
     @GetMapping("/{id}")
     @Operation(
@@ -130,7 +150,12 @@ public class RelatoUsuarioController {
     // ============================================
 
     /**
-     * ### ✏️ Atualizar relato existente
+     * ## ✏️ Atualizar relato existente
+     *
+     * Atualiza o conteúdo de um relato previamente cadastrado.
+     *
+     * - Requisição: JSON com novos dados
+     * - Resposta: DTO atualizado
      */
     @PutMapping("/{id}")
     @CacheEvict(value = "relatosUsuario", allEntries = true)
@@ -155,10 +180,15 @@ public class RelatoUsuarioController {
     // ============================================
 
     /**
-     * ### 🗑️ Excluir relato
+     * ## 🗑️ Excluir relato
+     *
+     * Remove um relato do sistema com base no ID.
+     *
+     * - HTTP: 204 No Content
      */
     @DeleteMapping("/{id}")
     @CacheEvict(value = "relatosUsuario", allEntries = true)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "Excluir relato",
             description = "Remove um relato do sistema.",
@@ -167,8 +197,7 @@ public class RelatoUsuarioController {
                     @ApiResponse(responseCode = "404", description = "Relato não encontrado")
             }
     )
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+    public void excluir(@PathVariable Long id) {
         service.excluir(id);
-        return ResponseEntity.noContent().build();
     }
 }

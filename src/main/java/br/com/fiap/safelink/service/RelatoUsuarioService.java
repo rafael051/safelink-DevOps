@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -26,16 +27,17 @@ import java.util.List;
  * # 🗣️ Service: RelatoUsuarioService
  *
  * Camada de regras de negócio responsável por manipular a entidade `RelatoUsuario`.
- * Executa validações, mapeamentos DTO↔Entidade, persistência, filtros dinâmicos e preenchimento de relacionamentos.
+ * Realiza persistência, mapeamentos DTO↔Entidade, preenchimento de relacionamentos e
+ * consultas com ou sem filtro dinâmico.
+ *
+ * ---
+ * 🔐 Todos os relatos são vinculados ao usuário autenticado.
+ * 🌎 Cada relato pertence a uma região geográfica.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class RelatoUsuarioService {
-
-    // ============================================
-    // 🔗 Injeção de dependências
-    // ============================================
 
     private final RelatoUsuarioRepository repository;
     private final RegiaoRepository regiaoRepository;
@@ -46,17 +48,18 @@ public class RelatoUsuarioService {
     // ============================================
 
     /**
-     * ### 📌 Gravar novo relato de usuário
-     *
-     * - Converte DTO em entidade
-     * - Preenche relacionamentos (região + usuário autenticado)
-     * - Persiste e retorna DTO
+     * Grava um novo relato vinculado ao usuário autenticado e à região informada.
      */
+    @Transactional
     public RelatoUsuarioResponseDTO gravar(RelatoUsuarioRequestDTO dto) {
+        log.info("📥 Criando novo relato de usuário para região ID {}", dto.getRegiaoId());
+
         RelatoUsuario relato = modelMapper.map(dto, RelatoUsuario.class);
         preencherRelacionamentos(relato, dto);
+
         relato = repository.save(relato);
-        log.info("✅ Relato de usuário criado com sucesso: ID {}", relato.getId());
+        log.info("✅ Relato criado com sucesso: ID {}", relato.getId());
+
         return toDTO(relato);
     }
 
@@ -65,15 +68,21 @@ public class RelatoUsuarioService {
     // ============================================
 
     /**
-     * ### ✏️ Atualizar relato existente
+     * Atualiza um relato de usuário já existente.
      */
+    @Transactional
     public RelatoUsuarioResponseDTO atualizar(Long id, RelatoUsuarioRequestDTO dto) {
+        log.info("✏️ Atualizando relato ID {}", id);
+
         RelatoUsuario relato = repository.findById(id)
                 .orElseThrow(() -> new RelatoUsuarioNotFoundException(id));
+
         modelMapper.map(dto, relato);
         preencherRelacionamentos(relato, dto);
+
         relato = repository.save(relato);
-        log.info("✏️ Relato de usuário atualizado: ID {}", relato.getId());
+        log.info("✅ Relato atualizado com sucesso: ID {}", relato.getId());
+
         return toDTO(relato);
     }
 
@@ -82,15 +91,18 @@ public class RelatoUsuarioService {
     // ============================================
 
     public Page<RelatoUsuarioResponseDTO> consultarComFiltro(RelatoUsuarioFilter filtro, Pageable pageable) {
+        log.info("🔍 Consultando relatos com filtro: {}", filtro);
+
         Specification<RelatoUsuario> spec = RelatoUsuarioSpecification.withFilters(filtro);
-        log.info("🔍 Consulta com filtros: {}", filtro);
         return repository.findAll(spec, pageable).map(this::toDTO);
     }
 
     public RelatoUsuarioResponseDTO consultarPorId(Long id) {
+        log.info("🔎 Consultando relato por ID: {}", id);
+
         RelatoUsuario relato = repository.findById(id)
                 .orElseThrow(() -> new RelatoUsuarioNotFoundException(id));
-        log.info("🔎 Relato de usuário localizado: ID {}", id);
+
         return toDTO(relato);
     }
 
@@ -100,7 +112,7 @@ public class RelatoUsuarioService {
     }
 
     public Page<RelatoUsuarioResponseDTO> consultarPaginado(Pageable pageable) {
-        log.info("📋 Listando relatos de usuários (paginado simples)");
+        log.info("📄 Consulta paginada de relatos de usuários");
         return repository.findAll(pageable).map(this::toDTO);
     }
 
@@ -108,12 +120,16 @@ public class RelatoUsuarioService {
     // 🗑️ Exclusão
     // ============================================
 
+    @Transactional
     public void excluir(Long id) {
+        log.info("❌ Excluindo relato ID: {}", id);
+
         if (!repository.existsById(id)) {
             throw new RelatoUsuarioNotFoundException("Relato não encontrado para exclusão: " + id);
         }
+
         repository.deleteById(id);
-        log.info("🗑️ Relato de usuário excluído: ID {}", id);
+        log.info("🗑️ Relato excluído com sucesso: ID {}", id);
     }
 
     // ============================================
@@ -121,7 +137,7 @@ public class RelatoUsuarioService {
     // ============================================
 
     /**
-     * ### 🧩 Preencher relacionamentos (região + usuário autenticado)
+     * Preenche a região e o usuário autenticado no relato.
      */
     private void preencherRelacionamentos(RelatoUsuario relato, RelatoUsuarioRequestDTO dto) {
         Regiao regiao = regiaoRepository.findById(dto.getRegiaoId())
@@ -134,7 +150,7 @@ public class RelatoUsuarioService {
     }
 
     /**
-     * ### 🔐 Obter usuário autenticado do contexto de segurança
+     * Obtém o usuário autenticado do contexto de segurança.
      */
     private User getUsuarioAutenticado() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -147,9 +163,12 @@ public class RelatoUsuarioService {
     }
 
     // ============================================
-    // 🔄 Conversão auxiliar
+    // 🔄 Conversão
     // ============================================
 
+    /**
+     * Converte a entidade `RelatoUsuario` para o DTO de resposta.
+     */
     private RelatoUsuarioResponseDTO toDTO(RelatoUsuario relato) {
         return modelMapper.map(relato, RelatoUsuarioResponseDTO.class);
     }

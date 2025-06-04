@@ -7,30 +7,33 @@ import br.com.fiap.safelink.filter.RegiaoFilter;
 import br.com.fiap.safelink.model.Regiao;
 import br.com.fiap.safelink.repository.RegiaoRepository;
 import br.com.fiap.safelink.specification.RegiaoSpecification;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 /**
  * # 🗺️ Service: RegiaoService
  *
- * Camada de regras de negócio para a entidade `Regiao`.
- * Realiza mapeamentos, persistência e filtros dinâmicos com Specification.
+ * Camada responsável por aplicar as regras de negócio da entidade `Regiao`.
+ * Oferece operações de CRUD e suporte a filtros dinâmicos com Specification.
+ *
+ * ---
+ * 🔁 Converte automaticamente entre entidade e DTO.
+ * 🧩 Utilizada por serviços que dependem de localização geográfica.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class RegiaoService {
-
-    // ============================================
-    // 🔗 Dependências
-    // ============================================
 
     private final RegiaoRepository repository;
     private final ModelMapper modelMapper;
@@ -40,10 +43,12 @@ public class RegiaoService {
     // ============================================
 
     /**
-     * ### 📌 Gravar nova região
+     * Grava uma nova região no sistema.
      *
-     * Persiste uma nova região no banco e retorna DTO de resposta.
+     * @param dto dados da nova região
+     * @return região salva convertida em DTO
      */
+    @Transactional
     public RegiaoResponseDTO gravar(RegiaoRequestDTO dto) {
         Regiao regiao = modelMapper.map(dto, Regiao.class);
         regiao = repository.save(regiao);
@@ -56,16 +61,21 @@ public class RegiaoService {
     // ============================================
 
     /**
-     * ### ✏️ Atualizar região existente
+     * Atualiza uma região existente no banco.
      *
-     * Localiza e atualiza os dados da região informada.
+     * @param id  identificador da região
+     * @param dto novos dados
+     * @return DTO da região atualizada
      */
+    @Transactional
     public RegiaoResponseDTO atualizar(Long id, RegiaoRequestDTO dto) {
         Regiao regiao = repository.findById(id)
                 .orElseThrow(() -> new RegiaoNotFoundException(id));
+
         modelMapper.map(dto, regiao);
         regiao = repository.save(regiao);
-        log.info("✏️ Região atualizada: ID {}", regiao.getId());
+
+        log.info("✏️ Região atualizada com sucesso: ID {}", regiao.getId());
         return toDTO(regiao);
     }
 
@@ -74,16 +84,16 @@ public class RegiaoService {
     // ============================================
 
     /**
-     * ### 🔍 Consulta com filtros dinâmicos
+     * Consulta regiões com filtros dinâmicos (Specification).
      */
     public Page<RegiaoResponseDTO> consultarComFiltro(RegiaoFilter filtro, Pageable pageable) {
         Specification<Regiao> spec = RegiaoSpecification.withFilters(filtro);
-        log.info("🔍 Consulta com filtros: {}", filtro);
+        log.info("🔍 Consulta com filtro: {}", filtro);
         return repository.findAll(spec, pageable).map(this::toDTO);
     }
 
     /**
-     * ### 🔎 Consultar por ID
+     * Consulta região por ID.
      */
     public RegiaoResponseDTO consultarPorId(Long id) {
         Regiao regiao = repository.findById(id)
@@ -93,7 +103,7 @@ public class RegiaoService {
     }
 
     /**
-     * ### 📋 Listar todas as regiões
+     * Lista todas as regiões (sem paginação).
      */
     public List<RegiaoResponseDTO> consultarTodas() {
         log.info("📋 Listando todas as regiões cadastradas");
@@ -101,17 +111,16 @@ public class RegiaoService {
     }
 
     /**
-     * ### 📋 Listar regiões com paginação simples
+     * Lista regiões com paginação simples.
      */
     public Page<RegiaoResponseDTO> consultarPaginado(Pageable pageable) {
-        log.info("📋 Listando regiões (paginado simples)");
+        log.info("📄 Listando regiões paginadas");
         return repository.findAll(pageable).map(this::toDTO);
     }
 
     /**
-     * ### 📦 Buscar entidade completa (uso interno)
-     *
-     * Utilizado em relacionamentos como EventoNatural ou PrevisaoRisco.
+     * Retorna a entidade `Regiao` pura (uso interno).
+     * Ex: utilizada em relacionamentos com `EventoNatural`.
      */
     public Regiao buscarEntidadePorId(Long id) {
         return repository.findById(id)
@@ -123,8 +132,9 @@ public class RegiaoService {
     // ============================================
 
     /**
-     * ### 🗑️ Excluir região
+     * Exclui uma região do sistema.
      */
+    @Transactional
     public void excluir(Long id) {
         if (!repository.existsById(id)) {
             throw new RegiaoNotFoundException("Região não encontrada para exclusão: " + id);
@@ -138,7 +148,7 @@ public class RegiaoService {
     // ============================================
 
     /**
-     * ### 🔄 Conversão entidade → DTO
+     * Converte a entidade `Regiao` para DTO de resposta.
      */
     private RegiaoResponseDTO toDTO(Regiao regiao) {
         return modelMapper.map(regiao, RegiaoResponseDTO.class);

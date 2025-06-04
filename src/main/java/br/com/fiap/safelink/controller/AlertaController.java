@@ -22,15 +22,25 @@ import org.springframework.web.bind.annotation.*;
 /**
  * # 📢 Controller: AlertaController
  *
- * Responsável por expor os endpoints REST para gerenciamento da entidade `Alerta`.
- * Suporta operações de criação, leitura com e sem filtros, atualização e exclusão.
+ * Camada responsável por expor os endpoints REST relacionados à entidade `Alerta`.
  *
  * ---
- * 🔐 Todos os endpoints exigem autenticação via JWT
- * 🌐 CORS liberado para http://localhost:3000
+ * ## 🔐 Segurança
+ * Todos os endpoints exigem autenticação via JWT.
+ *
+ * ---
+ * ## 🌐 Acesso
+ * CORS liberado para `http://localhost:3000`.
+ *
+ * ---
+ * ## 🔄 Funcionalidades expostas:
+ * - Criar novo alerta
+ * - Consultar alertas (todos, por ID, com filtros e paginação)
+ * - Atualizar alerta existente
+ * - Excluir alerta
  */
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "4 - Alertas", description = "Endpoints relacionados ao gerenciamento de alertas de risco")
+@Tag(name = "4 - Alertas", description = "Endpoints para gerenciamento de alertas de risco emitidos")
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/alertas")
@@ -44,13 +54,19 @@ public class AlertaController {
     // ============================================
 
     /**
-     * ### 📌 Cadastrar novo alerta
+     * ## 📌 Criar novo alerta
+     *
+     * Cadastra um novo alerta de risco no sistema.
+     *
+     * - Requisição: JSON com dados válidos do alerta
+     * - Resposta: DTO do alerta criado
+     * - HTTP: `201 Created` em caso de sucesso
      */
     @PostMapping
     @CacheEvict(value = "alertas", allEntries = true)
     @Operation(
             summary = "Cadastrar alerta",
-            description = "Registra um novo alerta de risco no sistema.",
+            description = "Cria e registra um novo alerta de risco.",
             responses = {
                     @ApiResponse(responseCode = "201", description = "Alerta criado com sucesso"),
                     @ApiResponse(responseCode = "400", description = "Erro de validação nos dados enviados")
@@ -61,16 +77,21 @@ public class AlertaController {
     }
 
     // ============================================
-    // 📋 GET /alertas (sem filtro, paginado)
+    // 📋 GET /alertas
     // ============================================
 
     /**
-     * ### 📋 Listar todos os alertas (paginado)
+     * ## 📋 Listar todos os alertas (paginado)
+     *
+     * Retorna todos os alertas do sistema de forma paginada, sem filtros.
+     *
+     * - Suporte a paginação, ordenação e tamanho de página.
+     * - Recomendado para uso geral e painéis administrativos.
      */
     @GetMapping
     @Operation(
             summary = "Listar alertas (paginado)",
-            description = "Retorna todos os alertas cadastrados, com suporte à paginação.",
+            description = "Retorna todos os alertas cadastrados com suporte à paginação.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Lista paginada de alertas retornada com sucesso")
             }
@@ -80,11 +101,18 @@ public class AlertaController {
     }
 
     // ============================================
-    // 📄 GET /alertas/filtro
+    // 🔍 GET /alertas/filtro
     // ============================================
 
     /**
-     * ### 📄 Consultar alertas com filtros e paginação
+     * ## 🔍 Consultar alertas com filtros dinâmicos
+     *
+     * Permite buscar alertas com base em múltiplos critérios, como:
+     * - Região
+     * - Nível de risco
+     * - Intervalo de datas
+     *
+     * Suporta paginação e ordenação.
      */
     @GetMapping("/filtro")
     @Cacheable(
@@ -93,7 +121,7 @@ public class AlertaController {
     )
     @Operation(
             summary = "Listar alertas com filtros",
-            description = "Consulta alertas por múltiplos critérios, com paginação e ordenação.",
+            description = "Consulta alertas com múltiplos critérios, ordenação e paginação.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Lista filtrada de alertas retornada com sucesso")
             }
@@ -106,11 +134,13 @@ public class AlertaController {
     }
 
     // ============================================
-    // 🔍 GET /alertas/{id}
+    // 🔎 GET /alertas/{id}
     // ============================================
 
     /**
-     * ### 🔍 Buscar alerta por ID
+     * ## 🔎 Buscar alerta por ID
+     *
+     * Consulta os dados de um alerta específico, informando o `ID` na URL.
      */
     @GetMapping("/{id}")
     @Operation(
@@ -130,7 +160,12 @@ public class AlertaController {
     // ============================================
 
     /**
-     * ### ✏️ Atualizar alerta existente
+     * ## ✏️ Atualizar alerta
+     *
+     * Atualiza um alerta existente no sistema.
+     *
+     * - Necessário fornecer o ID via path.
+     * - Requisição deve conter os novos dados válidos.
      */
     @PutMapping("/{id}")
     @CacheEvict(value = "alertas", allEntries = true)
@@ -155,20 +190,24 @@ public class AlertaController {
     // ============================================
 
     /**
-     * ### 🗑️ Excluir alerta
+     * ## 🗑️ Excluir alerta
+     *
+     * Remove um alerta de risco com base no seu identificador.
+     *
+     * - Após a exclusão, a resposta HTTP será `204 No Content`.
      */
     @DeleteMapping("/{id}")
     @CacheEvict(value = "alertas", allEntries = true)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "Excluir alerta",
-            description = "Remove um alerta de risco do sistema.",
+            description = "Remove um alerta do sistema com base no ID informado.",
             responses = {
                     @ApiResponse(responseCode = "204", description = "Alerta removido com sucesso"),
                     @ApiResponse(responseCode = "404", description = "Alerta não encontrado")
             }
     )
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+    public void excluir(@PathVariable Long id) {
         service.excluirAlerta(id);
-        return ResponseEntity.noContent().build();
     }
 }

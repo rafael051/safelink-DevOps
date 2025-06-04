@@ -5,36 +5,36 @@ import br.com.fiap.safelink.dto.response.UserResponseDTO;
 import br.com.fiap.safelink.exception.UsuarioNotFoundException;
 import br.com.fiap.safelink.model.User;
 import br.com.fiap.safelink.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-
 /**
  * # 👤 Service: UserService
  *
  * Camada de regras de negócio para a entidade `User`.
- * Responsável por:
- * - Criação, leitura, atualização e exclusão de usuários
- * - Validações de unicidade de e-mail
- * - Conversões entre DTO e entidade
- * - Criptografia de senha
+ * Fornece operações de CRUD, filtros paginados, conversão DTO/entidade e criptografia de senha.
+ *
+ * ---
+ * 🔐 Garante unicidade de e-mail e validações de negócio
+ * 🔄 Utiliza ModelMapper para conversão automática
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
-
-    // ============================================
-    // 🔗 Injeção de dependências
-    // ============================================
 
     private final UserRepository repository;
     private final ModelMapper modelMapper;
@@ -45,17 +45,24 @@ public class UserService {
     // ============================================
 
     /**
-     * Cria um novo usuário no sistema.
+     * Registra um novo usuário no sistema.
+     *
+     * - Verifica unicidade de e-mail
+     * - Criptografa a senha
+     *
+     * @param dto dados do usuário
+     * @return DTO do usuário criado
      */
-    public UserResponseDTO criarUsuario(UserRequestDTO dto) {
+    @Transactional
+    public UserResponseDTO gravar(UserRequestDTO dto) {
         if (repository.existsByEmail(dto.getEmail())) {
-            throw new ResponseStatusException(BAD_REQUEST, "E-mail já cadastrado.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-mail já cadastrado.");
         }
 
         User user = modelMapper.map(dto, User.class);
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
-
         user = repository.save(user);
+
         log.info("✅ Usuário criado com sucesso: ID {}", user.getId());
         return toDTO(user);
     }
@@ -65,21 +72,30 @@ public class UserService {
     // ============================================
 
     /**
-     * Atualiza os dados de um usuário existente.
+     * Atualiza os dados de um usuário.
+     *
+     * - Valida duplicidade de e-mail
+     * - Recriptografa a senha
+     *
+     * @param id  identificador do usuário
+     * @param dto novos dados
+     * @return DTO atualizado
      */
-    public Optional<UserResponseDTO> atualizarUsuario(Long id, UserRequestDTO dto) {
-        return repository.findById(id).map(user -> {
-            if (!user.getEmail().equals(dto.getEmail()) && repository.existsByEmail(dto.getEmail())) {
-                throw new ResponseStatusException(BAD_REQUEST, "E-mail já está em uso por outro usuário.");
-            }
+    @Transactional
+    public UserResponseDTO atualizar(Long id, UserRequestDTO dto) {
+        User user = repository.findById(id)
+                .orElseThrow(() -> new UsuarioNotFoundException(id));
 
-            modelMapper.map(dto, user);
-            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        if (!user.getEmail().equals(dto.getEmail()) && repository.existsByEmail(dto.getEmail())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-mail já está em uso por outro usuário.");
+        }
 
-            user = repository.save(user);
-            log.info("✏️ Usuário atualizado com sucesso: ID {}", user.getId());
-            return toDTO(user);
-        });
+        modelMapper.map(dto, user);
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user = repository.save(user);
+
+        log.info("✏️ Usuário atualizado com sucesso: ID {}", user.getId());
+        return toDTO(user);
     }
 
     // ============================================
@@ -87,19 +103,37 @@ public class UserService {
     // ============================================
 
     /**
-     * Lista todos os usuários cadastrados.
+     * Lista todos os usuários sem paginação.
      */
-    public List<UserResponseDTO> listarTodos() {
-        log.info("📋 Listando todos os usuários.");
+    public List<UserResponseDTO> consultarTodos() {
+        log.info("📋 Listando todos os usuários");
         return repository.findAll().stream().map(this::toDTO).toList();
     }
 
     /**
-     * Busca um usuário por ID.
+     * Lista usuários com paginação.
      */
-    public Optional<UserResponseDTO> buscarPorId(Long id) {
-        log.info("🔍 Buscando usuário por ID: {}", id);
-        return repository.findById(id).map(this::toDTO);
+    public Page<UserResponseDTO> consultarPaginado(Pageable pageable) {
+        log.info("📄 Listando usuários paginados");
+        return repository.findAll(pageable).map(this::toDTO);
+    }
+
+    /**
+     * Consulta usuário por ID.
+     */
+    public UserResponseDTO consultarPorId(Long id) {
+        User user = repository.findById(id)
+                .orElseThrow(() -> new UsuarioNotFoundException(id));
+        log.info("🔍 Usuário encontrado: ID {}", id);
+        return toDTO(user);
+    }
+
+    /**
+     * Retorna a entidade `User` pura (uso interno).
+     */
+    public User buscarEntidadePorId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new UsuarioNotFoundException(id));
     }
 
     // ============================================
@@ -107,16 +141,17 @@ public class UserService {
     // ============================================
 
     /**
-     * Exclui um usuário por ID.
+     * Exclui um usuário do sistema.
+     *
+     * @param id identificador do usuário
      */
-    public boolean excluirUsuario(Long id) {
+    @Transactional
+    public void excluir(Long id) {
         if (!repository.existsById(id)) {
             throw new UsuarioNotFoundException("Usuário não encontrado para exclusão: " + id);
         }
-
         repository.deleteById(id);
         log.info("🗑️ Usuário excluído com sucesso: ID {}", id);
-        return true;
     }
 
     // ============================================
@@ -124,7 +159,7 @@ public class UserService {
     // ============================================
 
     /**
-     * Converte a entidade User para o DTO de resposta.
+     * Converte a entidade `User` em `UserResponseDTO`.
      */
     private UserResponseDTO toDTO(User user) {
         return modelMapper.map(user, UserResponseDTO.class);

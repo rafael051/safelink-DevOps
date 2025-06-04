@@ -14,23 +14,24 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 /**
  * # ☁️ Service: PrevisaoRiscoService
  *
- * Camada de regras de negócio responsável por manipular a entidade `PrevisaoRisco`.
- * Realiza validações, conversões DTO↔Entidade, filtros e persistência no banco.
+ * Responsável por aplicar as regras de negócio sobre a entidade `PrevisaoRisco`.
+ * Realiza persistência, preenchimento de relacionamentos com `Regiao`, e consultas com filtros dinâmicos.
+ *
+ * ---
+ * 🔁 Conversão automática com ModelMapper
+ * 📦 Integração com `RegiaoService` para validação de relacionamentos
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PrevisaoRiscoService {
-
-    // ============================================
-    // 🔗 Injeção de dependências
-    // ============================================
 
     private final PrevisaoRiscoRepository repository;
     private final RegiaoService regiaoService;
@@ -41,13 +42,12 @@ public class PrevisaoRiscoService {
     // ============================================
 
     /**
-     * ### 📌 Gravar nova previsão de risco
+     * Cria uma nova previsão de risco.
      *
-     * - Converte o DTO para entidade
-     * - Preenche os relacionamentos (Região)
-     * - Persiste no banco
-     * - Retorna DTO de resposta
+     * @param dto dados da previsão
+     * @return previsão salva convertida em DTO
      */
+    @Transactional
     public PrevisaoRiscoResponseDTO gravar(PrevisaoRiscoRequestDTO dto) {
         PrevisaoRisco previsao = modelMapper.map(dto, PrevisaoRisco.class);
         preencherRelacionamentos(previsao, dto);
@@ -61,18 +61,21 @@ public class PrevisaoRiscoService {
     // ============================================
 
     /**
-     * ### ✏️ Atualizar previsão de risco existente
+     * Atualiza uma previsão de risco existente.
      *
-     * - Verifica existência
-     * - Aplica alterações do DTO
-     * - Persiste novamente no banco
+     * @param id  ID da previsão
+     * @param dto novos dados
+     * @return DTO da previsão atualizada
      */
+    @Transactional
     public PrevisaoRiscoResponseDTO atualizar(Long id, PrevisaoRiscoRequestDTO dto) {
         PrevisaoRisco previsao = repository.findById(id)
                 .orElseThrow(() -> new PrevisaoRiscoNotFoundException(id));
+
         modelMapper.map(dto, previsao);
         preencherRelacionamentos(previsao, dto);
         previsao = repository.save(previsao);
+
         log.info("✏️ Previsão de risco atualizada: ID {}", previsao.getId());
         return toDTO(previsao);
     }
@@ -82,7 +85,7 @@ public class PrevisaoRiscoService {
     // ============================================
 
     /**
-     * ### 🔍 Consultar com filtros dinâmicos
+     * Consulta previsões com filtros dinâmicos.
      */
     public Page<PrevisaoRiscoResponseDTO> consultarComFiltro(PrevisaoRiscoFilter filtro, Pageable pageable) {
         Specification<PrevisaoRisco> spec = PrevisaoRiscoSpecification.withFilters(filtro);
@@ -91,7 +94,7 @@ public class PrevisaoRiscoService {
     }
 
     /**
-     * ### 🔎 Consultar por ID
+     * Consulta previsão de risco por ID.
      */
     public PrevisaoRiscoResponseDTO consultarPorId(Long id) {
         PrevisaoRisco previsao = repository.findById(id)
@@ -101,7 +104,7 @@ public class PrevisaoRiscoService {
     }
 
     /**
-     * ### 📋 Listar todas as previsões (sem filtro)
+     * Lista todas as previsões sem filtro.
      */
     public List<PrevisaoRiscoResponseDTO> consultarTodas() {
         log.info("📋 Listando todas as previsões de risco");
@@ -109,10 +112,10 @@ public class PrevisaoRiscoService {
     }
 
     /**
-     * ### 📋 Listar previsões com paginação simples
+     * Lista previsões com paginação simples.
      */
     public Page<PrevisaoRiscoResponseDTO> consultarPaginado(Pageable pageable) {
-        log.info("📋 Listando previsões de risco (paginado simples)");
+        log.info("📄 Listando previsões de risco paginadas");
         return repository.findAll(pageable).map(this::toDTO);
     }
 
@@ -121,12 +124,14 @@ public class PrevisaoRiscoService {
     // ============================================
 
     /**
-     * ### 🗑️ Excluir previsão de risco
+     * Exclui uma previsão de risco.
      */
+    @Transactional
     public void excluir(Long id) {
         if (!repository.existsById(id)) {
             throw new PrevisaoRiscoNotFoundException("Previsão de risco não encontrada para exclusão: " + id);
         }
+
         repository.deleteById(id);
         log.info("🗑️ Previsão de risco excluída com sucesso: ID {}", id);
     }
@@ -136,7 +141,7 @@ public class PrevisaoRiscoService {
     // ============================================
 
     /**
-     * ### 🧩 Preencher relacionamentos (Região)
+     * Preenche os relacionamentos da entidade (Região).
      */
     private void preencherRelacionamentos(PrevisaoRisco previsao, PrevisaoRiscoRequestDTO dto) {
         if (dto.getRegiaoId() != null) {
@@ -149,7 +154,7 @@ public class PrevisaoRiscoService {
     // ============================================
 
     /**
-     * ### 🔄 Conversão Entidade → DTO
+     * Converte a entidade `PrevisaoRisco` para DTO de resposta.
      */
     private PrevisaoRiscoResponseDTO toDTO(PrevisaoRisco previsao) {
         return modelMapper.map(previsao, PrevisaoRiscoResponseDTO.class);

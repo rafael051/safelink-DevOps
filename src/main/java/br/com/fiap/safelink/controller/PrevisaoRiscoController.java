@@ -22,12 +22,20 @@ import org.springframework.web.bind.annotation.*;
 /**
  * # 🔮 Controller: PrevisaoRiscoController
  *
- * Responsável por expor os endpoints REST para gerenciamento da entidade `PrevisaoRisco`.
- * Oferece operações de criação, consulta (simples ou com filtros), atualização e exclusão.
+ * Camada REST para gerenciamento da entidade `PrevisaoRisco`.
  *
  * ---
- * 🔐 Todos os endpoints exigem autenticação via JWT (Bearer Token)
- * 🌐 CORS liberado para http://localhost:3000
+ * ## 🔐 Segurança
+ * - Requer autenticação JWT para todos os endpoints
+ *
+ * ---
+ * ## 🌐 CORS
+ * - Permite requisições vindas de `http://localhost:3000`
+ *
+ * ---
+ * ## Funcionalidades
+ * - Criar, buscar, listar com/sem filtro, atualizar e excluir previsões de risco
+ * - Cache para otimização de consultas
  */
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "7 - Previsões de Risco", description = "Endpoints relacionados à geração e gerenciamento de previsões de risco")
@@ -44,7 +52,13 @@ public class PrevisaoRiscoController {
     // ============================================
 
     /**
-     * ### 📌 Cadastrar nova previsão de risco
+     * ## 📌 Criar nova previsão de risco
+     *
+     * Cadastra uma nova previsão de risco baseada em dados ambientais e regionais.
+     *
+     * - Requisição: JSON com dados válidos
+     * - Resposta: DTO da previsão persistida
+     * - HTTP: 201 Created
      */
     @PostMapping
     @CacheEvict(value = "previsoesRisco", allEntries = true)
@@ -61,11 +75,13 @@ public class PrevisaoRiscoController {
     }
 
     // ============================================
-    // 📋 GET /previsoes-risco (sem filtro, paginado)
+    // 📋 GET /previsoes-risco
     // ============================================
 
     /**
-     * ### 📋 Listar todas as previsões de risco (paginado)
+     * ## 📋 Listar previsões (sem filtros)
+     *
+     * Retorna todas as previsões cadastradas, com paginação e ordenação.
      */
     @GetMapping
     @Operation(
@@ -80,11 +96,19 @@ public class PrevisaoRiscoController {
     }
 
     // ============================================
-    // 📄 GET /previsoes-risco/filtro
+    // 🔍 GET /previsoes-risco/filtro
     // ============================================
 
     /**
-     * ### 📄 Consultar previsões com filtros dinâmicos
+     * ## 🔍 Consultar previsões com filtros dinâmicos
+     *
+     * Realiza consultas por critérios como:
+     * - Data da previsão
+     * - Região
+     * - Nível de risco
+     *
+     * - Usa Specification + Pageable
+     * - Cache para evitar sobrecarga
      */
     @GetMapping("/filtro")
     @Cacheable(
@@ -106,11 +130,13 @@ public class PrevisaoRiscoController {
     }
 
     // ============================================
-    // 🔍 GET /previsoes-risco/{id}
+    // 🔎 GET /previsoes-risco/{id}
     // ============================================
 
     /**
-     * ### 🔍 Buscar previsão por ID
+     * ## 🔎 Buscar previsão por ID
+     *
+     * Retorna os dados de uma previsão de risco com base no identificador único.
      */
     @GetMapping("/{id}")
     @Operation(
@@ -130,7 +156,12 @@ public class PrevisaoRiscoController {
     // ============================================
 
     /**
-     * ### ✏️ Atualizar previsão de risco existente
+     * ## ✏️ Atualizar previsão de risco
+     *
+     * Altera os dados de uma previsão existente.
+     *
+     * - Requisição: JSON com campos válidos
+     * - HTTP: 200 OK
      */
     @PutMapping("/{id}")
     @CacheEvict(value = "previsoesRisco", allEntries = true)
@@ -155,10 +186,15 @@ public class PrevisaoRiscoController {
     // ============================================
 
     /**
-     * ### 🗑️ Excluir previsão de risco
+     * ## 🗑️ Excluir previsão de risco
+     *
+     * Remove a previsão do banco de dados com base no ID.
+     *
+     * - HTTP: 204 No Content
      */
     @DeleteMapping("/{id}")
     @CacheEvict(value = "previsoesRisco", allEntries = true)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "Excluir previsão de risco",
             description = "Remove uma previsão de risco do sistema.",
@@ -167,8 +203,7 @@ public class PrevisaoRiscoController {
                     @ApiResponse(responseCode = "404", description = "Previsão não encontrada")
             }
     )
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+    public void excluir(@PathVariable Long id) {
         service.excluir(id);
-        return ResponseEntity.noContent().build();
     }
 }

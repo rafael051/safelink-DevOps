@@ -22,12 +22,21 @@ import org.springframework.web.bind.annotation.*;
 /**
  * # 🌪️ Controller: EventoNaturalController
  *
- * Responsável por expor os endpoints REST para gerenciamento de `EventoNatural`.
- * Inclui operações CRUD, busca com filtros e cache.
+ * Controlador REST para a entidade `EventoNatural`, que representa ocorrências reais de eventos extremos.
  *
  * ---
- * 🔐 Todos os endpoints exigem autenticação via JWT
- * 🌐 CORS liberado para http://localhost:3000
+ * ## 🔐 Segurança
+ * Todos os endpoints requerem autenticação via JWT.
+ *
+ * ---
+ * ## 🌐 Acesso externo
+ * CORS liberado para `http://localhost:3000`.
+ *
+ * ---
+ * ## Funcionalidades
+ * - Criar, atualizar e excluir eventos naturais
+ * - Consultar com e sem filtros (paginado)
+ * - Utiliza cache para melhorar desempenho em consultas
  */
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "6 - Eventos Naturais", description = "Endpoints relacionados ao registro de eventos naturais extremos")
@@ -44,7 +53,13 @@ public class EventoNaturalController {
     // ============================================
 
     /**
-     * ### 📌 Registrar novo evento natural
+     * ## 📌 Criar novo evento natural
+     *
+     * Registra um novo evento natural no sistema.
+     *
+     * - Requisição: JSON com dados válidos
+     * - Resposta: objeto DTO com dados persistidos
+     * - HTTP: `201 Created` em caso de sucesso
      */
     @PostMapping
     @CacheEvict(value = "eventosNaturais", allEntries = true)
@@ -61,11 +76,13 @@ public class EventoNaturalController {
     }
 
     // ============================================
-    // 📋 GET /eventos-naturais (sem filtro, paginado)
+    // 📋 GET /eventos-naturais
     // ============================================
 
     /**
-     * ### 📋 Listar todos os eventos naturais (paginado)
+     * ## 📋 Listar eventos naturais (paginado)
+     *
+     * Retorna todos os eventos cadastrados, com suporte a paginação.
      */
     @GetMapping
     @Operation(
@@ -80,11 +97,18 @@ public class EventoNaturalController {
     }
 
     // ============================================
-    // 📄 GET /eventos-naturais/filtro
+    // 🔍 GET /eventos-naturais/filtro
     // ============================================
 
     /**
-     * ### 📄 Consultar eventos com filtros e paginação
+     * ## 🔍 Consultar eventos com filtros dinâmicos
+     *
+     * Permite aplicar múltiplos critérios de busca com paginação.
+     *
+     * Exemplos de filtros:
+     * - Tipo de evento
+     * - Intervalo de datas
+     * - Região
      */
     @GetMapping("/filtro")
     @Cacheable(
@@ -106,11 +130,13 @@ public class EventoNaturalController {
     }
 
     // ============================================
-    // 🔍 GET /eventos-naturais/{id}
+    // 🔎 GET /eventos-naturais/{id}
     // ============================================
 
     /**
-     * ### 🔍 Buscar evento por ID
+     * ## 🔎 Buscar evento por ID
+     *
+     * Recupera um evento natural específico pelo identificador único.
      */
     @GetMapping("/{id}")
     @Operation(
@@ -130,7 +156,12 @@ public class EventoNaturalController {
     // ============================================
 
     /**
-     * ### ✏️ Atualizar evento existente
+     * ## ✏️ Atualizar evento natural
+     *
+     * Atualiza os dados de um evento natural já existente.
+     *
+     * - Requisição: JSON com dados atualizados
+     * - Retorna os dados atualizados com `200 OK`
      */
     @PutMapping("/{id}")
     @CacheEvict(value = "eventosNaturais", allEntries = true)
@@ -155,10 +186,14 @@ public class EventoNaturalController {
     // ============================================
 
     /**
-     * ### 🗑️ Excluir evento natural
+     * ## 🗑️ Excluir evento natural
+     *
+     * Remove um evento natural com base no seu ID.
+     * - Retorna `204 No Content` em caso de sucesso.
      */
     @DeleteMapping("/{id}")
     @CacheEvict(value = "eventosNaturais", allEntries = true)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "Excluir evento natural",
             description = "Remove um evento natural do sistema.",
@@ -167,8 +202,7 @@ public class EventoNaturalController {
                     @ApiResponse(responseCode = "404", description = "Evento natural não encontrado")
             }
     )
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+    public void excluir(@PathVariable Long id) {
         service.excluir(id);
-        return ResponseEntity.noContent().build();
     }
 }

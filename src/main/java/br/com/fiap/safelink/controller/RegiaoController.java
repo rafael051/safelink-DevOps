@@ -22,12 +22,17 @@ import org.springframework.web.bind.annotation.*;
 /**
  * # 🗺️ Controller: RegiaoController
  *
- * Responsável por expor os endpoints REST para gerenciamento da entidade `Regiao`.
- * Fornece operações de criação, listagem com e sem filtros, consulta por ID, atualização e exclusão.
+ * Camada REST responsável pelo gerenciamento da entidade `Regiao`.
  *
  * ---
- * 🔐 Todos os endpoints exigem autenticação via JWT
- * 🌐 CORS liberado para http://localhost:3000
+ * ## 🔐 Segurança
+ * - Todos os endpoints exigem autenticação JWT
+ *
+ * ## 🌐 CORS
+ * - Permite acesso de frontend local em `http://localhost:3000`
+ *
+ * ## 📚 Funcionalidades
+ * - Criar, consultar, listar (com ou sem filtro), atualizar e excluir regiões geográficas
  */
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "3 - Regiões", description = "Endpoints relacionados ao cadastro e gerenciamento de regiões geográficas")
@@ -44,7 +49,13 @@ public class RegiaoController {
     // ============================================
 
     /**
-     * ### 📌 Cadastrar nova região
+     * ## 📌 Cadastrar nova região
+     *
+     * Cria um novo registro de região geográfica.
+     *
+     * - Requisição: JSON contendo cidade, estado e coordenadas
+     * - Resposta: DTO com ID e dados da região criada
+     * - HTTP: 201 Created
      */
     @PostMapping
     @CacheEvict(value = "regioes", allEntries = true)
@@ -61,11 +72,13 @@ public class RegiaoController {
     }
 
     // ============================================
-    // 📋 GET /regioes (sem filtro, paginado)
+    // 📋 GET /regioes
     // ============================================
 
     /**
-     * ### 📋 Listar todas as regiões (paginado)
+     * ## 📋 Listar todas as regiões (sem filtros)
+     *
+     * Retorna todas as regiões cadastradas com suporte à paginação e ordenação.
      */
     @GetMapping
     @Operation(
@@ -80,11 +93,17 @@ public class RegiaoController {
     }
 
     // ============================================
-    // 📄 GET /regioes/filtro
+    // 🔍 GET /regioes/filtro
     // ============================================
 
     /**
-     * ### 📄 Consultar regiões com filtros dinâmicos
+     * ## 🔍 Consultar regiões com filtros dinâmicos
+     *
+     * Permite buscar regiões com base em critérios como:
+     * - Nome da cidade
+     * - Estado (sigla)
+     *
+     * Utiliza Specification + Pageable com cache.
      */
     @GetMapping("/filtro")
     @Cacheable(
@@ -106,11 +125,13 @@ public class RegiaoController {
     }
 
     // ============================================
-    // 🔍 GET /regioes/{id}
+    // 🔎 GET /regioes/{id}
     // ============================================
 
     /**
-     * ### 🔍 Buscar região por ID
+     * ## 🔎 Buscar região por ID
+     *
+     * Retorna os dados de uma região específica com base no identificador único.
      */
     @GetMapping("/{id}")
     @Operation(
@@ -130,7 +151,12 @@ public class RegiaoController {
     // ============================================
 
     /**
-     * ### ✏️ Atualizar região existente
+     * ## ✏️ Atualizar região
+     *
+     * Atualiza os dados de uma região existente.
+     *
+     * - Requisição: JSON com novos dados da região
+     * - Resposta: DTO atualizado
      */
     @PutMapping("/{id}")
     @CacheEvict(value = "regioes", allEntries = true)
@@ -155,10 +181,15 @@ public class RegiaoController {
     // ============================================
 
     /**
-     * ### 🗑️ Excluir região
+     * ## 🗑️ Excluir região
+     *
+     * Remove a região geográfica do sistema com base no ID informado.
+     *
+     * - HTTP: 204 No Content
      */
     @DeleteMapping("/{id}")
     @CacheEvict(value = "regioes", allEntries = true)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "Excluir região",
             description = "Remove uma região do sistema.",
@@ -167,8 +198,7 @@ public class RegiaoController {
                     @ApiResponse(responseCode = "404", description = "Região não encontrada")
             }
     )
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+    public void excluir(@PathVariable Long id) {
         service.excluir(id);
-        return ResponseEntity.noContent().build();
     }
 }
