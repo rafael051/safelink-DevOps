@@ -117,14 +117,11 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- ❌ Banco H2 (removido do runtime, use só em perfil de teste) -->
-        <!--
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
         </dependency>
-        -->
+
 
     </dependencies>
 
