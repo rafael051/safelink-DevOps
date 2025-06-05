@@ -41,7 +41,7 @@ public class SwaggerConfig {
                         .contact(new Contact()
                                 .name("Equipe SafeLink - FIAP")
                                 .email("safelink@fiap.com.br")
-                                .url("https://github.com/fiap-global/safelink"))
+                                .url("https://github.com/rafael051/safelink"))
                         .license(new License()
                                 .name("MIT")
                                 .url("https://opensource.org/licenses/MIT"))
