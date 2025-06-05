@@ -23,10 +23,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "1 - Autenticação", description = "Endpoints para login e emissão de tokens JWT")
-@CrossOrigin(origins = {
-        "http://localhost:3000",
-        "https://<seu-projeto>.up.railway.app"
-})
+
 
 @RestController
 @RequiredArgsConstructor

@@ -36,10 +36,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "5 - Relatos de Usuário", description = "Endpoints relacionados aos relatos enviados por cidadãos e agentes de campo")
-@CrossOrigin(origins = {
-        "http://localhost:3000",
-        "https://<seu-projeto>.up.railway.app"
-})
+
 
 @RestController
 @RequestMapping("/relatos-usuario")

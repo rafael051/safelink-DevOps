@@ -41,11 +41,6 @@ import org.springframework.web.bind.annotation.*;
  */
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "4 - Alertas", description = "Endpoints para gerenciamento de alertas de risco emitidos")
-@CrossOrigin(origins = {
-        "http://localhost:3000",
-        "https://safelink-production.up.railway.app"
-})
-
 @RestController
 @RequestMapping("/alertas")
 @RequiredArgsConstructor
