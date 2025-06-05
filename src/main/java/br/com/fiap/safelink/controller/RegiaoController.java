@@ -36,7 +36,11 @@ import org.springframework.web.bind.annotation.*;
  */
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "3 - Regiões", description = "Endpoints relacionados ao cadastro e gerenciamento de regiões geográficas")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {
+        "http://localhost:3000",
+        "https://<seu-projeto>.up.railway.app"
+})
+
 @RestController
 @RequestMapping("/regioes")
 @RequiredArgsConstructor

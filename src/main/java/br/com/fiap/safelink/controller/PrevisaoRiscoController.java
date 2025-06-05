@@ -39,7 +39,11 @@ import org.springframework.web.bind.annotation.*;
  */
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "7 - Previsões de Risco", description = "Endpoints relacionados à geração e gerenciamento de previsões de risco")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {
+        "http://localhost:3000",
+        "https://<seu-projeto>.up.railway.app"
+})
+
 @RestController
 @RequestMapping("/previsoes-risco")
 @RequiredArgsConstructor

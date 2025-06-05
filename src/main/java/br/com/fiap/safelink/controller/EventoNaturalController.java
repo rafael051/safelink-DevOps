@@ -40,7 +40,11 @@ import org.springframework.web.bind.annotation.*;
  */
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "6 - Eventos Naturais", description = "Endpoints relacionados ao registro de eventos naturais extremos")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {
+        "http://localhost:3000",
+        "https://safelink-production.up.railway.app"
+})
+
 @RestController
 @RequestMapping("/eventos-naturais")
 @RequiredArgsConstructor

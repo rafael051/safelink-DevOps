@@ -7,6 +7,7 @@ import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
  * - Contato e licença
  * - Esquema de autenticação JWT (bearer)
  * - Segurança aplicada globalmente aos endpoints
+ * - URL base pública da API (Railway)
  */
 @Configuration
 public class SwaggerConfig {
@@ -28,7 +30,10 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
 
-                // 📘 Informações gerais da API SafeLink
+                // 🌍 URL base pública da API no Railway (ajuste se necessário)
+                .addServersItem(new Server().url("https://safelink-production.up.railway.app"))
+
+                // 📘 Informações da API
                 .info(new Info()
                         .title("SafeLink API")
                         .description("API do projeto SafeLink — Sistema inteligente para alerta e prevenção de desastres naturais, desenvolvido como solução para o desafio Global Solution FIAP 2025.")
@@ -42,7 +47,7 @@ public class SwaggerConfig {
                                 .url("https://opensource.org/licenses/MIT"))
                 )
 
-                // 🔐 Requerimento de segurança global
+                // 🔐 Requer autenticação JWT globalmente
                 .addSecurityItem(new SecurityRequirement().addList(BEARER_SCHEME_NAME))
 
                 // 🔐 Esquema de segurança JWT
