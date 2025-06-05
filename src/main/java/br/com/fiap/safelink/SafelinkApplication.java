@@ -9,9 +9,9 @@ import org.springframework.cache.annotation.EnableCaching;
 @SpringBootApplication
 @EnableCaching
 @OpenAPIDefinition(info = @Info(
-        title = "Recebedoria API",
+        title = "Safelink API",
         version = "v1",
-        description = "API do sistema Saflink"
+        description = "API do sistema Safelink"
 ))
 public class SafelinkApplication {
 
