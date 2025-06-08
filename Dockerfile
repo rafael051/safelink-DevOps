@@ -10,6 +10,7 @@ COPY . .
 # Compila a aplicação sem rodar os testes
 RUN mvn clean package -DskipTests
 
+
 # 🚀 Etapa 2: Runtime com JRE 17 (Alpine)
 FROM eclipse-temurin:17-jre-alpine
 
