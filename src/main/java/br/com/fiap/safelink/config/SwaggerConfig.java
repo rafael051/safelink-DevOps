@@ -31,7 +31,7 @@ public class SwaggerConfig {
         return new OpenAPI()
 
                 // 🌍 URL base pública da API no Railway (ajuste se necessário)
-                .addServersItem(new Server().url("https://safelink-production.up.railway.app"))
+                .addServersItem(new Server().url("http://localhost:8080"))
 
                 // 📘 Informações da API
                 .info(new Info()
